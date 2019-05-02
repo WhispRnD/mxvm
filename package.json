@@ -1,6 +1,6 @@
 {
   "name": "mxvm",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "MIT",
   "description": "",
   "main": "dist/mxvm.js",
@@ -24,7 +24,7 @@
     "react-dom": "^16.8.3"
   },
   "devDependencies": {
-    "typescript": "3.3.3333",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "typescript": "3.3.3333"
   }
 }
