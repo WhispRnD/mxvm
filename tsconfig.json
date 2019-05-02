@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "es6",
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "jsx": "react",
+
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": [
+      "reflect-metadata"
+    ],
+
+    "declaration": true,
+    "declarationDir": "./dist",
+    "declarationMap": true,
+    "sourceMap": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+
+
+    "removeComments": true,
+    "target": "es6",
+    "outDir": "dist"
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
