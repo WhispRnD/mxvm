@@ -1,6 +1,6 @@
 {
   "name": "mxvm",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "description": "",
   "main": "dist/mxvm.js",

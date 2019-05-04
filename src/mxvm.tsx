@@ -1,7 +1,12 @@
-import React, {Component, ComponentPropsWithRef, ElementType, PropsWithChildren, RefObject} from "react";
-import {observer} from "mobx-react";
+import React, {Component, ComponentPropsWithRef, ComponentType, ElementType, PropsWithChildren, RefObject} from "react";
+import {observer, Provider} from "mobx-react";
 import {injectable} from "inversify";
-import {action, observable} from "mobx";
+import {action, computed, observable, ObservableMap} from "mobx";
+
+
+export type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+export type Subtract<T, K> = Omit<T, keyof K>;
+
 
 /**
  * Marker interface
@@ -21,7 +26,7 @@ export interface BoundViewModelLifecycle {
 }
 
 export interface BoundViewProps<TViewModel extends ViewModel> {
-  model?: TViewModel;
+  model: TViewModel;
 }
 
 @injectable()
@@ -39,11 +44,6 @@ export abstract class BoundViewModel implements BoundViewModelLifecycle {
   }
 }
 
-export type ReactComponent<P = any> =
-  | React.FunctionComponent<P>
-  | React.ComponentClass<P>
-  | React.ClassicComponentClass<P>
-
 
 interface Newable<T> {
   new(...args: any[]): T;
@@ -59,47 +59,46 @@ export type ViewModelIdentifier<T> = (string | symbol | Newable<T> | Abstract<T>
 export type ViewModelResolver<TViewModel extends ViewModel> = (vmIdentifier: ViewModelIdentifier<any>, props: any) => TViewModel;
 
 export interface ViewModelRegistry {
-  registerInstance(vmIdentifier: ViewModelIdentifier<any>, vm: ViewModel): void;
+  addInstance(vmIdentifier: ViewModelIdentifier<any>, vm: ViewModel): void;
 
-  unregisterInstance(vmIdentifier: ViewModelIdentifier<any>, vm: ViewModel): void;
+  removeInstance(vmIdentifier: ViewModelIdentifier<any>, vm: ViewModel): void;
 
-  getIdentifiersMap(): Map<ViewModelIdentifier<any>, Set<ViewModel>>;
-
-  buckets: Map<ViewModelIdentifier<any>, Set<ViewModel>>;
+  instances: Map<ViewModelIdentifier<any>, Set<ViewModel>>;
 }
 
 
 @injectable()
 export class DefaultViewModelRegistry implements ViewModelRegistry {
-  @observable buckets = observable.map<ViewModelIdentifier<any>, Set<ViewModel>>();
+  _buckets: ObservableMap<ViewModelIdentifier<any>, Set<ViewModel>> = observable.map<ViewModelIdentifier<any>, Set<ViewModel>>();
 
   @action
-  registerInstance(identifier: ViewModelIdentifier<any>, model: ViewModel): void {
-    let instances = this.buckets.get(identifier);
+  addInstance(identifier: ViewModelIdentifier<any>, model: ViewModel): void {
+    let instances = this._buckets.get(identifier);
 
     if (!instances) {
       instances = observable.set();
-      this.buckets.set(identifier, instances);
+      this._buckets.set(identifier, instances);
     }
 
     instances.add(model);
   }
 
   @action
-  unregisterInstance(identifier: ViewModelIdentifier<any>, model: ViewModel): void {
-    const instances = this.buckets.get(identifier);
+  removeInstance(identifier: ViewModelIdentifier<any>, model: ViewModel): void {
+    const instances = this._buckets.get(identifier);
 
     if (instances) {
       instances.delete(model);
 
       if (!instances.size) {
-        this.buckets.delete(identifier);
+        this._buckets.delete(identifier);
       }
     }
   }
 
-  getIdentifiersMap(): Map<ViewModelIdentifier<any>, Set<ViewModel>> {
-    return this.buckets;
+  @computed
+  get instances(): Map<ViewModelIdentifier<any>, Set<ViewModel>> {
+    return this._buckets;
   }
 }
 
@@ -109,10 +108,10 @@ export class ViewModelLocator {
   }
 
   locateMany<T extends ViewModel>(vmIdentifier: ViewModelIdentifier<any>): T[] {
-    return Array.from(this.viewModelRegistry.buckets.get(vmIdentifier) as Set<T> || new Set<T>());
+    return Array.from(this.viewModelRegistry.instances.get(vmIdentifier) as Set<T> || new Set<T>());
   }
 
-  locate<T extends ViewModel>(vmIdentifier: ViewModelIdentifier<any>): T | null {
+  locateFirst<T extends ViewModel>(vmIdentifier: ViewModelIdentifier<any>): T | null {
     return this.locateMany(vmIdentifier)[0] as T || null;
   }
 }
@@ -199,15 +198,17 @@ export interface MxvmProviderProps extends PropsWithChildren<any> {
 
 export const MxvmContext = React.createContext<MxvmContextProps>({});
 
-export const MxvmProvider = ({resolver, registry, children}: MxvmProviderProps) =>
-  <MxvmContext.Provider value={{resolver, registry}}>
-    {children}
-  </MxvmContext.Provider>;
+export const MxvmProvider = ({resolver, registry, children, ...injectables}: MxvmProviderProps) =>
+  <Provider {...injectables}>
+    <MxvmContext.Provider value={{resolver, registry}}>
+      {children}
+    </MxvmContext.Provider>
+  </Provider>;
 
 // todo: still couldn't find out the right TS signatures, that why there is an 'any' as the return type
 export const bindViewModel = <TViewModel extends ViewModel>(vmIdentifier: ViewModelIdentifier<any>):
-  <P extends object>(component: ReactComponent<P & BoundViewProps<TViewModel>>) => any =>
-  <P extends object>(component: ReactComponent<P & BoundViewProps<TViewModel>>) => {
+  <P extends object>(component: ComponentType<P & BoundViewProps<TViewModel>>) => ComponentType<Subtract<P, BoundViewProps<TViewModel>>> =>
+  <P extends object>(component: ComponentType<P & BoundViewProps<TViewModel>>) => {
 
     const observerComponent = observer(component);
 
@@ -225,8 +226,8 @@ export const bindViewModel = <TViewModel extends ViewModel>(vmIdentifier: ViewMo
                          viewModelIdentifier={vmIdentifier}
                          viewModelResolver={resolver}
                          viewComponent={observerComponent}
-                         onBind={vm => registry.registerInstance(vmIdentifier, vm)}
-                         onUnbind={vm => registry.unregisterInstance(vmIdentifier, vm)}
+                         onBind={vm => registry.addInstance(vmIdentifier, vm)}
+                         onUnbind={vm => registry.removeInstance(vmIdentifier, vm)}
                          {...props}/>
         }}
       </MxvmContext.Consumer>;
