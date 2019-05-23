@@ -207,7 +207,7 @@ export const MxvmProvider = ({resolver, registry, children, ...injectables}: Mxv
 
 // todo: still couldn't find out the right TS signatures, that why there is an 'any' as the return type
 export const bindViewModel = <TViewModel extends ViewModel>(vmIdentifier: ViewModelIdentifier<any>):
-  <P extends object>(component: ComponentType<P & BoundViewProps<TViewModel>>) => ComponentType<Subtract<P, BoundViewProps<TViewModel>>> =>
+  <P extends object>(component: ComponentType<P & BoundViewProps<TViewModel>>) => ComponentType<Subtract<P, BoundViewProps<TViewModel>> & Partial<BoundViewProps<TViewModel>>> =>
   <P extends object>(component: ComponentType<P & BoundViewProps<TViewModel>>) => {
 
     const observerComponent = observer(component);
