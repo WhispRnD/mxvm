@@ -180,7 +180,7 @@ export class Binder<TViewModel extends ViewModel> extends Component<BinderProps<
     const bindingLifecycle = this.state.model as Partial<BoundViewModelLifecycle>;
     const action = funcResolver(bindingLifecycle);
     if (action) {
-      action.call(bindingLifecycle, args);
+      action.call(bindingLifecycle, ...args);
     }
   }
 }
