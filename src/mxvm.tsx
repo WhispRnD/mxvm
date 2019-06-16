@@ -207,7 +207,7 @@ export interface UseBinderProps<TViewModel extends ViewModel> {
     onBind: (vm: ViewModel) => void;
 }
 
-export const useBinder = <TViewModel extends ViewModel>({
+export const hookBinder = <TViewModel extends ViewModel>({
                                                             viewModelIdentifier,
                                                             viewModelResolver,
                                                             onBind,
@@ -309,7 +309,7 @@ export const useViewModel = <TViewModel extends ViewModel>(
         throw new Error('Registry has not been provided!');
     }
 
-    const { model } = useBinder({
+    const { model } = hookBinder({
         viewModelIdentifier: vmIdentifier,
         viewModelResolver: resolver,
         onBind: vm => registry.addInstance(vmIdentifier, vm),
