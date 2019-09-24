@@ -195,7 +195,7 @@ export class Binder<TViewModel extends ViewModel> extends Component<
         const bindingLifecycle = this.state.model as Partial<BoundViewModelLifecycle>;
         const action = funcResolver(bindingLifecycle);
         if (action) {
-            action.call(bindingLifecycle, ...args);
+            action.apply(bindingLifecycle, args);
         }
     }
 }
