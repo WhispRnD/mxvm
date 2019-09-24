@@ -77,7 +77,7 @@ export class DefaultViewModelRegistry implements ViewModelRegistry {
     _buckets: ObservableMap<ViewModelIdentifier<any>, Set<ViewModel>> = observable.map<
         ViewModelIdentifier<any>,
         Set<ViewModel>
-        >();
+    >();
 
     @action
     addInstance(identifier: ViewModelIdentifier<any>, model: ViewModel): void {
@@ -138,7 +138,7 @@ export interface BinderProps<TViewModel extends ViewModel> {
 export class Binder<TViewModel extends ViewModel> extends Component<
     BinderProps<TViewModel>,
     { model: TViewModel }
-    > {
+> {
     private readonly viewRef: RefObject<any> = React.createRef();
 
     constructor(props: BinderProps<TViewModel>, context: any) {
@@ -208,11 +208,11 @@ export interface UseBinderProps<TViewModel extends ViewModel> {
 }
 
 export const hookBinder = <TViewModel extends ViewModel>({
-                                                            viewModelIdentifier,
-                                                            viewModelResolver,
-                                                            onBind,
-                                                            onUnbind
-                                                        }: UseBinderProps<TViewModel>): { model: TViewModel } => {
+    viewModelIdentifier,
+    viewModelResolver,
+    onBind,
+    onUnbind
+}: UseBinderProps<TViewModel>): { model: TViewModel } => {
     const [model] = useState(viewModelResolver(viewModelIdentifier));
 
     useEffect(() => {
@@ -251,11 +251,11 @@ export interface MxvmProviderProps extends PropsWithChildren<any> {
 export const MxvmContext = React.createContext<MxvmContextProps>({});
 
 export const MxvmProvider = ({
-                                 resolver,
-                                 registry,
-                                 children,
-                                 ...injectables
-                             }: MxvmProviderProps) => (
+    resolver,
+    registry,
+    children,
+    ...injectables
+}: MxvmProviderProps) => (
     <Provider {...injectables}>
         <MxvmContext.Provider value={{ resolver, registry }}>{children}</MxvmContext.Provider>
     </Provider>
@@ -268,7 +268,7 @@ export const bindViewModel = <TViewModel extends ViewModel>(
     component: ComponentType<P & BoundViewProps<TViewModel>>
 ) => ComponentType<
     Subtract<P, BoundViewProps<TViewModel>> & Partial<BoundViewProps<TViewModel>>
-    >) => <P extends object>(component: ComponentType<P & BoundViewProps<TViewModel>>) => {
+>) => <P extends object>(component: ComponentType<P & BoundViewProps<TViewModel>>) => {
     const observerComponent = observer(component);
 
     return ({ model, ...props }: { model?: ViewModel } & any) => (
