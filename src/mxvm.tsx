@@ -38,7 +38,7 @@ export interface BoundViewProps<TViewModel extends ViewModel> {
 
 @injectable()
 export abstract class BoundViewModel implements BoundViewModelLifecycle {
-    protected viewRef: React.RefObject<any> | null = null;
+    protected viewRef: RefObject<any> | null = null;
 
     onActivate(props: any) {}
 
@@ -150,8 +150,7 @@ export class Binder<TViewModel extends ViewModel> extends Component<
 
     componentDidMount(): void {
         this.notifyOfViewLifecycle(x => x.onActivate, this.props);
-        // todo: consider removal of onViewLoaded
-        this.notifyOfViewLifecycle(x => x.onViewLoaded, this.viewRef);
+        this.notifyOfViewLifecycle(x => x.onViewLoaded, this.viewRef); // todo: consider removal of onViewLoaded
     }
 
     componentDidUpdate(
@@ -176,7 +175,7 @@ export class Binder<TViewModel extends ViewModel> extends Component<
 
     render() {
         const { viewComponent: ViewComponent, ...props } = this.props;
-        return <ViewComponent ref={this.viewRef} model={this.state.model} {...props} />;
+        return <ViewComponent model={this.state.model} {...props}/>;
     }
 
     public get wrappedInstance() {
