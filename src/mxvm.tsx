@@ -175,7 +175,7 @@ export class Binder<TViewModel extends ViewModel> extends Component<
 
     render() {
         const { viewComponent: ViewComponent, ...props } = this.props;
-        return <ViewComponent model={this.state.model} {...props}/>;
+        return <ViewComponent model={this.state.model} {...props} />;
     }
 
     public get wrappedInstance() {
@@ -204,19 +204,21 @@ export interface UseBinderProps<TViewModel extends ViewModel> {
     viewModelResolver: ViewModelResolver<TViewModel>;
     onUnbind: (vm: ViewModel) => void;
     onBind: (vm: ViewModel) => void;
+    props?: any;
 }
 
 export const hookBinder = <TViewModel extends ViewModel>({
     viewModelIdentifier,
     viewModelResolver,
     onBind,
-    onUnbind
+    onUnbind,
+    props
 }: UseBinderProps<TViewModel>): { model: TViewModel } => {
     const [model] = useState(viewModelResolver(viewModelIdentifier));
 
     useEffect(() => {
         onBind(model);
-        notifyOfViewLifecycle(x => x.onActivate);
+        notifyOfViewLifecycle(x => x.onActivate, props);
 
         return () => {
             notifyOfViewLifecycle(x => x.onDeactivate);
@@ -225,12 +227,13 @@ export const hookBinder = <TViewModel extends ViewModel>({
     }, []);
 
     const notifyOfViewLifecycle = (
-        funcResolver: (lifecycle: Partial<BoundViewModelLifecycle>) => Function | undefined
+        funcResolver: (lifecycle: Partial<BoundViewModelLifecycle>) => Function | undefined,
+        ...args: any[]
     ) => {
         const bindingLifecycle = model as Partial<BoundViewModelLifecycle>;
         const action = funcResolver(bindingLifecycle);
         if (action) {
-            action.call(bindingLifecycle);
+            action.apply(bindingLifecycle, args);
         }
     };
 
@@ -297,7 +300,8 @@ export const bindViewModel = <TViewModel extends ViewModel>(
 };
 
 export const useViewModel = <TViewModel extends ViewModel>(
-    vmIdentifier: ViewModelIdentifier<any>
+    vmIdentifier: ViewModelIdentifier<any>,
+    props?: any
 ): { model: TViewModel } => {
     const { registry, resolver } = useContext(MxvmContext);
 
@@ -312,7 +316,8 @@ export const useViewModel = <TViewModel extends ViewModel>(
         viewModelIdentifier: vmIdentifier,
         viewModelResolver: resolver,
         onBind: vm => registry.addInstance(vmIdentifier, vm),
-        onUnbind: vm => registry.removeInstance(vmIdentifier, vm)
+        onUnbind: vm => registry.removeInstance(vmIdentifier, vm),
+        props
     });
 
     return { model };
